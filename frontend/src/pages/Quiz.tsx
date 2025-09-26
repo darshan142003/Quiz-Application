@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import Option from "../components/Options";
+import Question from "../components/Question";
+import NavigationButton from "../components/NavigationButton";
+import ResultScreen from "../components/ResultScreen";
 
 interface Option {
     id: number;
@@ -98,47 +102,7 @@ export default function Quiz() {
     }
 
     if (result) {
-        return (
-            <div className="p-6 flex flex-col items-center">
-                <h2 className="text-2xl font-bold mb-4">
-                    Score: {result.score} / {result.total}
-                </h2>
-                <div className="w-full max-w-xl space-y-4">
-                    {result.results.map((r) => {
-                        const q = quiz?.questions.find((q) => q.id === r.questionId);
-                        return (
-                            <div
-                                key={r.questionId}
-                                className={`p-4 rounded-lg shadow ${r.isCorrect ? "bg-green-200" : "bg-red-200"
-                                    }`}
-                            >
-                                <h3 className="font-semibold">{q?.text}</h3>
-                                <p>
-                                    Correct Answer:{" "}
-                                    <span className="font-medium">{r.correctAnswer.text}</span>
-                                </p>
-                                <p>
-                                    Your Answer:{" "}
-                                    <span
-                                        className={
-                                            r.isCorrect ? "text-green-700" : "text-red-700"
-                                        }
-                                    >
-                                        {
-                                            q?.options?.find(
-                                                (o) =>
-                                                    answers.find((a) => a.questionId === q.id)
-                                                        ?.optionId === o.id
-                                            )?.text
-                                        }
-                                    </span>
-                                </p>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
+        return <ResultScreen result={result} quiz={quiz} answers={answers} />;
     }
 
     return (
@@ -146,58 +110,37 @@ export default function Quiz() {
             <h2 className="text-2xl font-bold mb-6">{quiz?.title}</h2>
 
             {currentQuestion && (
-                <div className="w-full max-w-xl bg-gray-800 text-white rounded-lg shadow-lg p-6">
-                    <p className="text-lg font-medium mb-4">
-                        Question {currentIndex + 1} of {quiz?.questions.length}
-                    </p>
-                    <h3 className="text-xl mb-6">{currentQuestion.text}</h3>
-
-                    <div className="space-y-3">
-                        {currentQuestion.options?.map((o) => {
-                            const selected = answers.find(
-                                (a) =>
-                                    a.questionId === currentQuestion.id && a.optionId === o.id
-                            );
-                            return (
-                                <button
-                                    key={o.id}
-                                    onClick={() => handleClick(currentQuestion.id, o.id)}
-                                    className={`w-full text-left px-4 py-2 rounded-lg transition ${selected
-                                        ? "bg-green-600 text-white"
-                                        : "bg-gray-700 hover:bg-gray-600"
-                                        }`}
-                                >
-                                    {o.text}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
+                <Question
+                    questionId={currentQuestion.id}
+                    text={currentQuestion.text}
+                    options={currentQuestion.options}
+                    selectedOptions={answers}
+                    onOptionClick={handleClick}
+                    questionNumber={currentIndex + 1}
+                    totalQuestions={quiz?.questions.length || 0}
+                />
             )}
 
-            {/* Navigation buttons */}
             <div className="flex justify-between w-full max-w-xl mt-6">
-                <button
+                <NavigationButton
+                    text="Previous"
                     onClick={prevQuestion}
                     disabled={currentIndex === 0}
-                    className="px-4 py-2 bg-gray-600 rounded-lg text-white disabled:opacity-50"
-                >
-                    Previous
-                </button>
+                    color="gray"
+                />
+
                 {quiz && currentIndex === quiz.questions.length - 1 ? (
-                    <button
+                    <NavigationButton
+                        text="Submit"
                         onClick={onSubmit}
-                        className="px-4 py-2 bg-green-600 rounded-lg text-white"
-                    >
-                        Submit
-                    </button>
+                        color="green"
+                    />
                 ) : (
-                    <button
+                    <NavigationButton
+                        text="Next"
                         onClick={nextQuestion}
-                        className="px-4 py-2 bg-blue-600 rounded-lg text-white"
-                    >
-                        Next
-                    </button>
+                        color="blue"
+                    />
                 )}
             </div>
         </div>
