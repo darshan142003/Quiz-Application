@@ -37,15 +37,17 @@ export default function Landing() {
     return (
         <div className="flex flex-wrap justify-center gap-6 p-6">
             {quiz ? (
-                quiz.map((q) => (
-                    <QuizCard
-                        key={q.id}
-                        id={q.id}
-                        title={q.title}
-                        description={q.description}
-                        onClick={handleClick} // pass your click handler
-                    />
-                ))
+                <div className="flex flex-col items-center space-y-8 p-10 w-screen">
+                    {quiz.map((q) => (
+                        <QuizCard
+                            key={q.id}
+                            id={q.id}
+                            title={q.title}
+                            description={q.description}
+                            onClick={handleClick}
+                        />
+                    ))}
+                </div>
             ) : (
                 <p className="text-lg font-medium text-gray-500 dark:text-gray-400">
                     Loading quizzes...

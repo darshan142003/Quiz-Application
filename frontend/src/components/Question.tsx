@@ -1,6 +1,5 @@
 import Option from "./Options";
 
-
 interface OptionType {
     id: number;
     text: string;
@@ -26,13 +25,15 @@ export default function Question({
     totalQuestions,
 }: QuestionProps) {
     return (
-        <div className="w-full max-w-xl bg-gray-800 text-white rounded-lg shadow-lg p-6">
-            <p className="text-lg font-medium mb-4">
+        <div className="w-full max-w-3xl bg-white shadow-lg rounded-xl p-8 mx-auto my-6 border border-gray-200">
+            {/* Question Header */}
+            <p className="text-gray-600 text-lg font-medium mb-2">
                 Question {questionNumber} of {totalQuestions}
             </p>
-            <h3 className="text-xl mb-6">{text}</h3>
+            <h3 className="text-2xl font-semibold mb-6 text-gray-900">{text}</h3>
 
-            <div className="space-y-3">
+            {/* Options */}
+            <div className="space-y-4">
                 {options?.map((o) => {
                     const selected = selectedOptions.find(
                         (a) => a.questionId === questionId && a.optionId === o.id
