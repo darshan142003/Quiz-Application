@@ -9,10 +9,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.submitQuiz = exports.getQuiz = void 0;
+exports.submitQuiz = exports.getQuestions = exports.getQuiz = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const getQuiz = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const quiz = yield prisma.quiz.findMany();
+    res.json(quiz);
+});
+exports.getQuiz = getQuiz;
+const getQuestions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const quizId = parseInt(req.params.id);
     const quiz = yield prisma.quiz.findUnique({
         where: { id: quizId },
@@ -36,7 +41,7 @@ const getQuiz = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }));
     res.json({ quizId: quiz.id, title: quiz.title, questions });
 });
-exports.getQuiz = getQuiz;
+exports.getQuestions = getQuestions;
 const submitQuiz = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const quizId = parseInt(req.params.id);
     const userAnswers = req.body.answers;

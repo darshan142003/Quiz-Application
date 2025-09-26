@@ -11,6 +11,13 @@ interface UserAnswer {
 
 export const getQuiz = async (req: Request, res: Response) => {
 
+    const quiz = await prisma.quiz.findMany();
+    res.json(quiz);
+
+}
+
+export const getQuestions = async (req: Request, res: Response) => {
+
     const quizId = parseInt(req.params.id);
 
     const quiz = await prisma.quiz.findUnique({
