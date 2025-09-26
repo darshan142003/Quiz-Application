@@ -1,35 +1,47 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+interface Question {
+  id: number;
+  text: string;
+  options?: { id: number, text: string }[];
+}
+
+interface Quiz {
+  quizId: number;
+  title: string;
+  questions: Question[]
+
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
+
+  useEffect(() => {
+    const response = axios.get("http://localhost:3000/quizzes/1/questions");
+    response.then(res => {
+      setQuiz(res.data);
+      console.log(res.data);
+    })
+  }, [])
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      <h2>{quiz?.title}</h2>
+
+      {quiz?.questions.map(q => (
+        <div key={q.id} style={{ marginBottom: "20px" }}>
+          <div>{q.text}</div>
+          <div style={{ paddingLeft: "20px" }}>
+            {q.options?.map(o => (
+              <div key={o.id}>{o.text}</div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default App
