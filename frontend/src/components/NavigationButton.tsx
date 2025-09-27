@@ -3,7 +3,7 @@ interface NavigationButtonProps {
     text: string;
     onClick: () => void;
     disabled?: boolean;
-    color?: "gray" | "blue" | "green"; // optional color prop
+    color?: "gray" | "blue" | "green";
 }
 
 export default function NavigationButton({

@@ -11,7 +11,6 @@ interface Quiz {
 }
 
 
-
 export default function Landing() {
     const navigate = useNavigate();
     const [quiz, setQuiz] = useState<Quiz[] | null>(null);
