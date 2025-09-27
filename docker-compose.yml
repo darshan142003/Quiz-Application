@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    image: dxrsh/vertoquiz-backend:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/prisma:/app/prisma
+    environment:
+      - DATABASE_URL=file:/app/prisma/dev.db
+
+  frontend:
+    build: ./frontend
+    image: dxrsh/vertoquiz-frontend:latest
+    ports:
+      - "3001:3001"
+    depends_on:
+      - backend
