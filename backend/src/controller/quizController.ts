@@ -69,6 +69,10 @@ function calculateScore(quiz: Quiz, userAnswers: UserAnswer[]) {
 
 
 
+
+//*************Route Handlers*********** */
+
+
 //returns all the quiz with it its title 
 export const getQuiz = async (req: Request, res: Response) => {
     const quiz = await prisma.quiz.findMany();

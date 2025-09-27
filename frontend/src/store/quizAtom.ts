@@ -1,4 +1,4 @@
-// store/quizStore.ts
+
 import { atom } from "recoil";
 
 interface Option {

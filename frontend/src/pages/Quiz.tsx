@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import Option from "../components/Options";
-import Question from "../components/Question";
 import NavigationButton from "../components/NavigationButton";
 import ResultScreen from "../components/ResultScreen";
 import { useRecoilState } from "recoil";
@@ -70,18 +69,6 @@ export default function Quiz() {
         }
     };
 
-    const nextQuestion = () => {
-        if (quiz && currentIndex < quiz.questions.length - 1) {
-            setCurrentIndex((prev) => prev + 1);
-        }
-    };
-
-    const prevQuestion = () => {
-        if (currentIndex > 0) {
-            setCurrentIndex((prev) => prev - 1);
-        }
-    };
-
     const currentQuestion = quiz?.questions[currentIndex];
 
     if (loading) {
@@ -101,7 +88,7 @@ export default function Quiz() {
 
     return (
         <div className="h-[calc(100vh-100px)] w-screen bg-gradient-to-br from-gray-50 to-white flex flex-col overflow-hidden">
-            {/* Header with Timer - Fixed height */}
+
             <div className="flex-shrink-0 h-16 flex justify-between items-center px-4 sm:px-6 bg-white border-b border-gray-200">
                 <div>
                     <span className="text-sm text-gray-500">Question {currentIndex + 1} of {quiz?.questions.length}</span>
@@ -109,7 +96,7 @@ export default function Quiz() {
                 <QuizTimer duration={45} onTimeUp={onSubmit} />
             </div>
 
-            {/* Progress Bar - Fixed height */}
+
             <div className="flex-shrink-0 h-3 flex items-center px-4 sm:px-6 bg-white">
                 <div className="w-full bg-gray-200 rounded-full h-1">
                     <div
@@ -121,12 +108,11 @@ export default function Quiz() {
                 </div>
             </div>
 
-            {/* Main Content Area - Flexible height */}
             <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 py-4 min-h-0">
                 <div className="w-full max-w-4xl mx-auto">
                     {currentQuestion && (
                         <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
-                            {/* Question and Options */}
+
                             <div className="mb-6">
                                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 leading-tight">
                                     {currentQuestion.text}
@@ -149,16 +135,16 @@ export default function Quiz() {
                                 </div>
                             </div>
 
-                            {/* Navigation Controls */}
                             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                                 <NavigationButton
                                     text="Previous"
-                                    onClick={prevQuestion}
-                                    disabled={currentIndex === 0}
+                                    type="previous"
+                                    currentIndex={currentIndex}
+                                    totalQuestions={quiz?.questions.length || 0}
+                                    onNavigate={setCurrentIndex}
                                     color="gray"
                                 />
 
-                                {/* Question Dots */}
                                 <div className="flex items-center space-x-1 order-first sm:order-none">
                                     {quiz?.questions.slice(0, 8).map((_, index) => (
                                         <div
@@ -166,9 +152,7 @@ export default function Quiz() {
                                             className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${index === currentIndex
                                                 ? "bg-blue-500 scale-125"
                                                 : answers.some(
-                                                    (a) =>
-                                                        a.questionId ===
-                                                        quiz.questions[index].id
+                                                    (a) => a.questionId === quiz.questions[index].id
                                                 )
                                                     ? "bg-green-400"
                                                     : "bg-gray-300"
@@ -191,7 +175,10 @@ export default function Quiz() {
                                 ) : (
                                     <NavigationButton
                                         text="Next"
-                                        onClick={nextQuestion}
+                                        type="next"
+                                        currentIndex={currentIndex}
+                                        totalQuestions={quiz?.questions.length || 0}
+                                        onNavigate={setCurrentIndex}
                                         color="blue"
                                     />
                                 )}

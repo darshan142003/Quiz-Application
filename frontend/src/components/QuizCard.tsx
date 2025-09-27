@@ -11,17 +11,14 @@ export default function QuizCard({ id, title, description, onClick }: QuizCardPr
             onClick={() => onClick(id)}
             className="group w-full max-w-lg bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 cursor-pointer p-8 flex flex-col gap-6"
         >
-            {/* Title */}
             <h2 className="text-2xl font-semibold text-gray-900 leading-tight">
                 {title}
             </h2>
 
-            {/* Description */}
             <p className="text-gray-600 text-base leading-relaxed line-clamp-3">
                 {description}
             </p>
 
-            {/* Call to Action */}
             <div className="flex items-center justify-between pt-2">
                 <span className="text-sm font-medium text-blue-600 group-hover:text-blue-700 transition-colors">
                     Start Quiz
