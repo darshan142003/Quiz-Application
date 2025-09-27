@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 interface QuizTimerProps {
-    duration: number; // in seconds
+    duration: number;
     onTimeUp: () => void;
 }
 

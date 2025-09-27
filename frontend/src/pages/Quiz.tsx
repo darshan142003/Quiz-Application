@@ -100,17 +100,17 @@ export default function Quiz() {
     }
 
     return (
-        <div className="h-screen w-screen bg-gradient-to-br from-gray-50 to-white flex flex-col" style={{ overflow: 'hidden' }}>
-            {/* Header with Timer - 8% height */}
-            <div className="h-[8vh] flex justify-between items-center px-6 bg-white border-b border-gray-200">
+        <div className="h-[calc(100vh-100px)] w-screen bg-gradient-to-br from-gray-50 to-white flex flex-col overflow-hidden">
+            {/* Header with Timer - Fixed height */}
+            <div className="flex-shrink-0 h-16 flex justify-between items-center px-4 sm:px-6 bg-white border-b border-gray-200">
                 <div>
                     <span className="text-sm text-gray-500">Question {currentIndex + 1} of {quiz?.questions.length}</span>
                 </div>
                 <QuizTimer duration={45} onTimeUp={onSubmit} />
             </div>
 
-            {/* Progress Bar - 3% height */}
-            <div className="h-[3vh] flex items-center px-6 bg-white">
+            {/* Progress Bar - Fixed height */}
+            <div className="flex-shrink-0 h-3 flex items-center px-4 sm:px-6 bg-white">
                 <div className="w-full bg-gray-200 rounded-full h-1">
                     <div
                         className="bg-gradient-to-r from-blue-500 to-purple-600 h-1 rounded-full transition-all duration-300"
@@ -121,75 +121,86 @@ export default function Quiz() {
                 </div>
             </div>
 
-            {/* Main Content - 79% height */}
-            <div className="h-[79vh] flex items-center justify-center px-6">
-                <div className="w-full max-w-4xl">
+            {/* Main Content Area - Flexible height */}
+            <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 py-4 min-h-0">
+                <div className="w-full max-w-4xl mx-auto">
                     {currentQuestion && (
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-                            <div className="mb-4">
-                                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
+                            {/* Question and Options */}
+                            <div className="mb-6">
+                                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 leading-tight">
                                     {currentQuestion.text}
                                 </h2>
                                 <div className="grid grid-cols-1 gap-3">
-                                    {currentQuestion?.options?.map((option, index) => (
+                                    {currentQuestion?.options?.map((option) => (
                                         <Option
                                             key={option.id}
                                             text={option.text}
-                                            selected={answers.some(a => a.questionId === currentQuestion.id && a.optionId === option.id)}
-                                            onClick={() => handleClick(currentQuestion.id, option.id)}
+                                            selected={answers.some(
+                                                (a) =>
+                                                    a.questionId === currentQuestion.id &&
+                                                    a.optionId === option.id
+                                            )}
+                                            onClick={() =>
+                                                handleClick(currentQuestion.id, option.id)
+                                            }
                                         />
                                     ))}
-
                                 </div>
                             </div>
+
+                            {/* Navigation Controls */}
+                            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                                <NavigationButton
+                                    text="Previous"
+                                    onClick={prevQuestion}
+                                    disabled={currentIndex === 0}
+                                    color="gray"
+                                />
+
+                                {/* Question Dots */}
+                                <div className="flex items-center space-x-1 order-first sm:order-none">
+                                    {quiz?.questions.slice(0, 8).map((_, index) => (
+                                        <div
+                                            key={index}
+                                            className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${index === currentIndex
+                                                ? "bg-blue-500 scale-125"
+                                                : answers.some(
+                                                    (a) =>
+                                                        a.questionId ===
+                                                        quiz.questions[index].id
+                                                )
+                                                    ? "bg-green-400"
+                                                    : "bg-gray-300"
+                                                }`}
+                                        />
+                                    ))}
+                                    {quiz && quiz.questions.length > 8 && (
+                                        <span className="text-xs text-gray-500 ml-1">
+                                            +{quiz.questions.length - 8}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {quiz && currentIndex === quiz.questions.length - 1 ? (
+                                    <NavigationButton
+                                        text="Submit"
+                                        onClick={onSubmit}
+                                        color="green"
+                                    />
+                                ) : (
+                                    <NavigationButton
+                                        text="Next"
+                                        onClick={nextQuestion}
+                                        color="blue"
+                                    />
+                                )}
+                            </div>
                         </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Footer - 10% height */}
-            <div className="h-[10vh] flex items-center justify-center px-6 border-t border-gray-200 bg-white">
-                <div className="flex justify-between items-center w-full max-w-4xl">
-                    <NavigationButton
-                        text="Previous"
-                        onClick={prevQuestion}
-                        disabled={currentIndex === 0}
-                        color="gray"
-                    />
-
-                    {/* Question Dots */}
-                    <div className="flex items-center space-x-1">
-                        {quiz?.questions.slice(0, 8).map((_, index) => (
-                            <div
-                                key={index}
-                                className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${index === currentIndex
-                                    ? 'bg-blue-500 scale-125'
-                                    : answers.some(a => a.questionId === quiz.questions[index].id)
-                                        ? 'bg-green-400'
-                                        : 'bg-gray-300'
-                                    }`}
-                            />
-                        ))}
-                        {quiz && quiz.questions.length > 8 && (
-                            <span className="text-xs text-gray-500 ml-1">+{quiz.questions.length - 8}</span>
-                        )}
-                    </div>
-
-                    {quiz && currentIndex === quiz.questions.length - 1 ? (
-                        <NavigationButton
-                            text="Submit"
-                            onClick={onSubmit}
-                            color="green"
-                        />
-                    ) : (
-                        <NavigationButton
-                            text="Next"
-                            onClick={nextQuestion}
-                            color="blue"
-                        />
                     )}
                 </div>
             </div>
         </div>
     );
 }
+
