@@ -19,13 +19,13 @@ This will start both frontend and backend services automatically.
 Navigate to the backend directory:
 
 ```bash
-cd backend
+cd /backend
 ```
 
 1. Install dependencies:
 
 ```bash
-npm install
+npm /install
 ```
 
 2. Set up environment variables:  
@@ -56,7 +56,7 @@ npm start
 Test the backend score calculation logic:
 
 ```bash
-cd backend
+cd /backend
 npm run test:submit
 ```
 
@@ -65,7 +65,7 @@ npm run test:submit
 Navigate to the frontend directory:
 
 ```bash
-cd frontend
+cd /frontend
 ```
 
 1. Install dependencies:
