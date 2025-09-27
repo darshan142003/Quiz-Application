@@ -4,21 +4,36 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+
+//Types
 interface UserAnswer {
     questionId: number;
     optionId: number;
 }
 
-export const getQuiz = async (req: Request, res: Response) => {
-
-    const quiz = await prisma.quiz.findMany();
-    res.json(quiz);
-
+interface Option {
+    id: number;
+    text: string;
+    isCorrect: boolean;
 }
 
-export const getQuestions = async (req: Request, res: Response) => {
+interface Question {
+    id: number;
+    text: string;
+    options: Option[];
+}
 
-    const quizId = parseInt(req.params.id);
+interface Quiz {
+    id: number;
+    title: string;
+    questions: Question[];
+}
+
+
+//*************HELPER FUNCTIONS*********** */
+
+//returns the specific quiz along with its question
+export const findQuiz = async (quizId: number) => {
 
     const quiz = await prisma.quiz.findUnique({
         where: { id: quizId },
@@ -30,6 +45,44 @@ export const getQuestions = async (req: Request, res: Response) => {
             }
         }
     })
+
+    return quiz;
+}
+
+
+//return the score of the quiz as per the answers submitted by user
+function calculateScore(quiz: Quiz, userAnswers: UserAnswer[]) {
+    let score = 0;
+
+    const results = quiz.questions.map(q => {
+        const userAnswer = userAnswers.find(a => a.questionId === q.id);
+        const correctOption = q.options.find(o => o.isCorrect);
+        const isCorrect = userAnswer?.optionId === correctOption?.id;
+
+        if (isCorrect) score++;
+
+        return { questionId: q.id, isCorrect, correctAnswer: correctOption };
+    });
+
+    return { score, total: quiz.questions.length, results };
+}
+
+
+
+//returns all the quiz with it its title 
+export const getQuiz = async (req: Request, res: Response) => {
+    const quiz = await prisma.quiz.findMany();
+    res.json(quiz);
+
+}
+
+
+//returns all the questions for perticular quiz
+export const getQuestions = async (req: Request, res: Response) => {
+
+    const quizId = parseInt(req.params.id);
+
+    const quiz = await findQuiz(quizId);
 
     if (!quiz) return res.status(404).json({ message: "Quiz not found !!" });
 
@@ -46,37 +99,17 @@ export const getQuestions = async (req: Request, res: Response) => {
 
 }
 
+//returns score of the user along with its quiz analysis
 export const submitQuiz = async (req: Request, res: Response) => {
     const quizId = parseInt(req.params.id);
     const userAnswers: UserAnswer[] = req.body.answers;
 
-    const quiz = await prisma.quiz.findUnique({
-        where: { id: quizId },
-        include: {
-            questions: {
-                include: {
-                    options: true
-                }
-            }
-        }
-    });
+    const quiz = await findQuiz(quizId);
 
-    if (!quiz) return res.json(404).json({ messgae: "Quiz not found!!" });
+    if (!quiz) return res.status(404).json({ message: "Quiz not found!!" });
 
+    const { score, total, results } = calculateScore(quiz, userAnswers);
 
-    let score = 0;
-
-    const results = quiz.questions.map(q => {
-
-        const userAnswer = userAnswers.find(a => a.questionId === q.id);
-        const correctOption = q.options.find(o => o.isCorrect);
-        const isCorrect = userAnswer?.optionId === correctOption?.id;
-
-        if (isCorrect) score++;
-
-        return { questionId: q.id, isCorrect: isCorrect, correctAnswer: correctOption };
-    })
-
-    res.json({ score, total: quiz.questions.length, results });
-}
+    res.json({ score, total, results });
+};
 

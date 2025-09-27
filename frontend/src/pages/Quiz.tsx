@@ -5,24 +5,14 @@ import Option from "../components/Options";
 import Question from "../components/Question";
 import NavigationButton from "../components/NavigationButton";
 import ResultScreen from "../components/ResultScreen";
+import { useRecoilState } from "recoil";
+import { quizState } from "../store/quizAtom";
 
 interface Option {
     id: number;
     text: string;
     isCorrect?: boolean;
     questionId?: number;
-}
-
-interface Question {
-    id: number;
-    text: string;
-    options?: Option[];
-}
-
-interface Quiz {
-    quizId: number;
-    title: string;
-    questions: Question[];
 }
 
 interface UserAnswer {
@@ -41,7 +31,7 @@ interface Result {
 }
 
 export default function Quiz() {
-    const [quiz, setQuiz] = useState<Quiz | null>(null);
+    const [quiz, setQuiz] = useRecoilState(quizState);
     const { id } = useParams<{ id: string }>();
     const [answers, setAnswers] = useState<UserAnswer[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);

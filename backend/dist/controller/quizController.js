@@ -9,16 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.submitQuiz = exports.getQuestions = exports.getQuiz = void 0;
+exports.submitQuiz = exports.getQuestions = exports.getQuiz = exports.findQuiz = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
-const getQuiz = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const quiz = yield prisma.quiz.findMany();
-    res.json(quiz);
-});
-exports.getQuiz = getQuiz;
-const getQuestions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const quizId = parseInt(req.params.id);
+//*************HELPER FUNCTIONS*********** */
+//returns the specific quiz along with its question
+const findQuiz = (quizId) => __awaiter(void 0, void 0, void 0, function* () {
     const quiz = yield prisma.quiz.findUnique({
         where: { id: quizId },
         include: {
@@ -29,6 +25,32 @@ const getQuestions = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             }
         }
     });
+    return quiz;
+});
+exports.findQuiz = findQuiz;
+//return the score of the quiz as per the answers submitted by user
+function calculateScore(quiz, userAnswers) {
+    let score = 0;
+    const results = quiz.questions.map(q => {
+        const userAnswer = userAnswers.find(a => a.questionId === q.id);
+        const correctOption = q.options.find(o => o.isCorrect);
+        const isCorrect = (userAnswer === null || userAnswer === void 0 ? void 0 : userAnswer.optionId) === (correctOption === null || correctOption === void 0 ? void 0 : correctOption.id);
+        if (isCorrect)
+            score++;
+        return { questionId: q.id, isCorrect, correctAnswer: correctOption };
+    });
+    return { score, total: quiz.questions.length, results };
+}
+//returns all the quiz with it its title 
+const getQuiz = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const quiz = yield prisma.quiz.findMany();
+    res.json(quiz);
+});
+exports.getQuiz = getQuiz;
+//returns all the questions for perticular quiz
+const getQuestions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const quizId = parseInt(req.params.id);
+    const quiz = yield (0, exports.findQuiz)(quizId);
     if (!quiz)
         return res.status(404).json({ message: "Quiz not found !!" });
     const questions = quiz.questions.map(q => ({
@@ -42,30 +64,14 @@ const getQuestions = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     res.json({ quizId: quiz.id, title: quiz.title, questions });
 });
 exports.getQuestions = getQuestions;
+//returns score of the user along with its quiz analysis
 const submitQuiz = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const quizId = parseInt(req.params.id);
     const userAnswers = req.body.answers;
-    const quiz = yield prisma.quiz.findUnique({
-        where: { id: quizId },
-        include: {
-            questions: {
-                include: {
-                    options: true
-                }
-            }
-        }
-    });
+    const quiz = yield (0, exports.findQuiz)(quizId);
     if (!quiz)
-        return res.json(404).json({ messgae: "Quiz not found!!" });
-    let score = 0;
-    const results = quiz.questions.map(q => {
-        const userAnswer = userAnswers.find(a => a.questionId === q.id);
-        const correctOption = q.options.find(o => o.isCorrect);
-        const isCorrect = (userAnswer === null || userAnswer === void 0 ? void 0 : userAnswer.optionId) === (correctOption === null || correctOption === void 0 ? void 0 : correctOption.id);
-        if (isCorrect)
-            score++;
-        return { questionId: q.id, isCorrect: isCorrect, correctAnswer: correctOption };
-    });
-    res.json({ score, total: quiz.questions.length, results });
+        return res.status(404).json({ message: "Quiz not found!!" });
+    const { score, total, results } = calculateScore(quiz, userAnswers);
+    res.json({ score, total, results });
 });
 exports.submitQuiz = submitQuiz;
