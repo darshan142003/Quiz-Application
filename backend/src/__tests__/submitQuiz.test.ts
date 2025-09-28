@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 
-
 const mockFindUnique = jest.fn();
 
 jest.mock('@prisma/client', () => ({
@@ -25,12 +24,12 @@ const mockResponse = (): Partial<Response> => {
     return res;
 };
 
-describe('submitQuiz Function', () => {
+describe('submitQuiz Score Calculation', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-    it('should return correct score for all correct answers', async () => {
+    it('should calculate score correctly for all correct answers', async () => {
         mockFindUnique.mockResolvedValue({
             id: 1,
             title: 'Test Quiz',
@@ -86,7 +85,7 @@ describe('submitQuiz Function', () => {
         });
     });
 
-    it('should return partial score for mixed answers', async () => {
+    it('should calculate score correctly for mixed correct/incorrect answers', async () => {
         mockFindUnique.mockResolvedValue({
             id: 1,
             title: 'Test Quiz',
@@ -141,21 +140,62 @@ describe('submitQuiz Function', () => {
         });
     });
 
-    it('should return 404 for non-existent quiz', async () => {
-        mockFindUnique.mockResolvedValue(null);
+    it('should calculate score correctly for all wrong answers', async () => {
+        mockFindUnique.mockResolvedValue({
+            id: 1,
+            title: 'Test Quiz',
+            questions: [
+                {
+                    id: 1,
+                    text: 'What is 2 + 2?',
+                    options: [
+                        { id: 1, text: '3', isCorrect: false },
+                        { id: 2, text: '4', isCorrect: true }
+                    ]
+                },
+                {
+                    id: 2,
+                    text: 'Capital of France?',
+                    options: [
+                        { id: 4, text: 'London', isCorrect: false },
+                        { id: 5, text: 'Paris', isCorrect: true }
+                    ]
+                }
+            ]
+        });
 
-        const req = mockRequest({ id: '999' }, { answers: [] });
+        const req = mockRequest(
+            { id: '1' },
+            {
+                answers: [
+                    { questionId: 1, optionId: 1 },
+                    { questionId: 2, optionId: 4 }
+                ]
+            }
+        );
         const res = mockResponse();
 
         await submitQuiz(req as Request, res as Response);
 
-        expect(res.status).toHaveBeenCalledWith(404);
         expect(res.json).toHaveBeenCalledWith({
-            message: 'Quiz not found!!'
+            score: 0,
+            total: 2,
+            results: [
+                {
+                    questionId: 1,
+                    isCorrect: false,
+                    correctAnswer: { id: 2, text: '4', isCorrect: true }
+                },
+                {
+                    questionId: 2,
+                    isCorrect: false,
+                    correctAnswer: { id: 5, text: 'Paris', isCorrect: true }
+                }
+            ]
         });
     });
 
-    it('should handle empty answers array', async () => {
+    it('should calculate score correctly when no answers provided', async () => {
         mockFindUnique.mockResolvedValue({
             id: 1,
             title: 'Test Quiz',
@@ -184,6 +224,61 @@ describe('submitQuiz Function', () => {
                     questionId: 1,
                     isCorrect: false,
                     correctAnswer: { id: 2, text: '4', isCorrect: true }
+                }
+            ]
+        });
+    });
+
+    it('should calculate score correctly when some questions are unanswered', async () => {
+        mockFindUnique.mockResolvedValue({
+            id: 1,
+            title: 'Test Quiz',
+            questions: [
+                {
+                    id: 1,
+                    text: 'What is 2 + 2?',
+                    options: [
+                        { id: 1, text: '3', isCorrect: false },
+                        { id: 2, text: '4', isCorrect: true }
+                    ]
+                },
+                {
+                    id: 2,
+                    text: 'Capital of France?',
+                    options: [
+                        { id: 4, text: 'London', isCorrect: false },
+                        { id: 5, text: 'Paris', isCorrect: true }
+                    ]
+                }
+            ]
+        });
+
+        const req = mockRequest(
+            { id: '1' },
+            {
+                answers: [
+                    { questionId: 1, optionId: 2 }
+
+                ]
+            }
+        );
+        const res = mockResponse();
+
+        await submitQuiz(req as Request, res as Response);
+
+        expect(res.json).toHaveBeenCalledWith({
+            score: 1,
+            total: 2,
+            results: [
+                {
+                    questionId: 1,
+                    isCorrect: true,
+                    correctAnswer: { id: 2, text: '4', isCorrect: true }
+                },
+                {
+                    questionId: 2,
+                    isCorrect: false,
+                    correctAnswer: { id: 5, text: 'Paris', isCorrect: true }
                 }
             ]
         });
