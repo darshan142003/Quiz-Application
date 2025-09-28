@@ -1,49 +1,34 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { useRecoilState } from "recoil";
+import { quizState } from "../store/quizAtom";
+import { useQuiz } from "../hooks/useQuiz";
+import { type UserAnswer } from "../types/quiz.types";
 import Option from "../components/Options";
 import NavigationButton from "../components/NavigationButton";
 import ResultScreen from "../components/ResultScreen";
-import { useRecoilState } from "recoil";
-import { quizState } from "../store/quizAtom";
 import QuizTimer from "../components/Timer";
 
-interface Option {
-    id: number;
-    text: string;
-    isCorrect?: boolean;
-    questionId?: number;
-}
-
-interface UserAnswer {
-    questionId: number;
-    optionId: number;
-}
-
-interface Result {
-    score: number;
-    total: number;
-    results: {
-        questionId: number;
-        isCorrect: boolean;
-        correctAnswer: Option;
-    }[];
-}
-
 export default function Quiz() {
-    const [quiz, setQuiz] = useRecoilState(quizState);
     const { id } = useParams<{ id: string }>();
+    const [quiz, setQuiz] = useRecoilState(quizState);
     const [answers, setAnswers] = useState<UserAnswer[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<Result | null>(null);
+
+    const {
+        quiz: fetchedQuiz,
+        loading,
+        submissionLoading,
+        result,
+        error,
+        submitQuiz
+    } = useQuiz(id!);
 
     useEffect(() => {
-        axios.get(`http://localhost:3000/api/${id}/questions`).then((res) => {
-            setQuiz(res.data);
-            console.log(res.data);
-        });
-    }, [id]);
+        if (fetchedQuiz && !quiz) {
+            setQuiz(fetchedQuiz);
+        }
+    }, [fetchedQuiz, quiz, setQuiz]);
 
     const handleClick = (questionId: number, optionId: number) => {
         setAnswers((prev) =>
@@ -56,17 +41,7 @@ export default function Quiz() {
     };
 
     const onSubmit = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.post(`http://localhost:3000/api/${id}/submit`, {
-                answers,
-            });
-            setResult(response.data);
-        } catch (err) {
-            console.error("Error submitting answers", err);
-        } finally {
-            setLoading(false);
-        }
+        await submitQuiz(answers);
     };
 
     const currentQuestion = quiz?.questions[currentIndex];
@@ -76,7 +51,28 @@ export default function Quiz() {
             <div className="flex justify-center items-center h-screen">
                 <div className="flex flex-col items-center space-y-4">
                     <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"></div>
+                    <p className="text-gray-600 font-medium">Loading quiz...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (submissionLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="flex flex-col items-center space-y-4">
+                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"></div>
                     <p className="text-gray-600 font-medium">Submitting your answers...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                    <p className="text-red-600">{error}</p>
                 </div>
             </div>
         );
@@ -88,14 +84,12 @@ export default function Quiz() {
 
     return (
         <div className="h-[calc(100vh-100px)] w-screen bg-gradient-to-br from-gray-50 to-white flex flex-col overflow-hidden">
-
             <div className="flex-shrink-0 h-16 flex justify-between items-center px-4 sm:px-6 bg-white border-b border-gray-200">
                 <div>
                     <span className="text-sm text-gray-500">Question {currentIndex + 1} of {quiz?.questions.length}</span>
                 </div>
                 <QuizTimer duration={45} onTimeUp={onSubmit} />
             </div>
-
 
             <div className="flex-shrink-0 h-3 flex items-center px-4 sm:px-6 bg-white">
                 <div className="w-full bg-gray-200 rounded-full h-1">
@@ -112,7 +106,6 @@ export default function Quiz() {
                 <div className="w-full max-w-4xl mx-auto">
                     {currentQuestion && (
                         <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 sm:p-6">
-
                             <div className="mb-6">
                                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 leading-tight">
                                     {currentQuestion.text}
@@ -190,4 +183,3 @@ export default function Quiz() {
         </div>
     );
 }
-

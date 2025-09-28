@@ -1,119 +1,64 @@
 import { Request, Response } from "express";
+import { quizService } from "../services/quizService";
+import { type UserAnswer } from "../types/quiz.types";
 
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
-
-
-//Types
-interface UserAnswer {
-    questionId: number;
-    optionId: number;
-}
-
-interface Option {
-    id: number;
-    text: string;
-    isCorrect: boolean;
-}
-
-interface Question {
-    id: number;
-    text: string;
-    options: Option[];
-}
-
-interface Quiz {
-    id: number;
-    title: string;
-    questions: Question[];
-}
-
-
-//*************HELPER FUNCTIONS*********** */
-
-//returns the specific quiz along with its question
-export const findQuiz = async (quizId: number) => {
-
-    const quiz = await prisma.quiz.findUnique({
-        where: { id: quizId },
-        include: {
-            questions: {
-                include: {
-                    options: true
-                }
-            }
-        }
-    })
-
-    return quiz;
-}
-
-
-//return the score of the quiz as per the answers submitted by user
-function calculateScore(quiz: Quiz, userAnswers: UserAnswer[]) {
-    let score = 0;
-
-    const results = quiz.questions.map(q => {
-        const userAnswer = userAnswers.find(a => a.questionId === q.id);
-        const correctOption = q.options.find(o => o.isCorrect);
-        const isCorrect = userAnswer?.optionId === correctOption?.id;
-
-        if (isCorrect) score++;
-
-        return { questionId: q.id, isCorrect, correctAnswer: correctOption };
-    });
-
-    return { score, total: quiz.questions.length, results };
-}
-
-
-
-
-//*************Route Handlers*********** */
-
-
-//returns all the quiz with it its title 
-export const getQuiz = async (req: Request, res: Response) => {
-    const quiz = await prisma.quiz.findMany();
-    res.json(quiz);
-
-}
-
-
-//returns all the questions for perticular quiz
-export const getQuestions = async (req: Request, res: Response) => {
-
-    const quizId = parseInt(req.params.id);
-
-    const quiz = await findQuiz(quizId);
-
-    if (!quiz) return res.status(404).json({ message: "Quiz not found !!" });
-
-    const questions = quiz.questions.map(q => ({
-        id: q.id,
-        text: q.text,
-        options: q.options.map(o => ({
-            id: o.id,
-            text: o.text
-        }))
-    }));
-
-    res.json({ quizId: quiz.id, title: quiz.title, questions })
-
-}
-
-//returns score of the user along with its quiz analysis
-export const submitQuiz = async (req: Request, res: Response) => {
-    const quizId = parseInt(req.params.id);
-    const userAnswers: UserAnswer[] = req.body.answers;
-
-    const quiz = await findQuiz(quizId);
-
-    if (!quiz) return res.status(404).json({ message: "Quiz not found!!" });
-
-    const { score, total, results } = calculateScore(quiz, userAnswers);
-
-    res.json({ score, total, results });
+export const getQuizzes = async (req: Request, res: Response) => {
+    try {
+        const quizzes = await quizService.getAllQuizzes();
+        res.json(quizzes);
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch quizzes' });
+    }
 };
 
+export const getQuizQuestions = async (req: Request, res: Response) => {
+    try {
+        const quizId = parseInt(req.params.id);
+        if (isNaN(quizId)) {
+            return res.status(400).json({ message: 'Invalid quiz ID' });
+        }
+
+        const quiz = await quizService.getQuizById(quizId);
+        if (!quiz) {
+            return res.status(404).json({ message: "Quiz not found!" });
+        }
+
+        const questions = quiz.questions.map(q => ({
+            id: q.id,
+            text: q.text,
+            options: q.options.map(o => ({
+                id: o.id,
+                text: o.text
+            }))
+        }));
+
+        res.json({ quizId: quiz.id, title: quiz.title, questions });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch quiz questions' });
+    }
+};
+
+export const submitQuiz = async (req: Request, res: Response) => {
+    try {
+        const quizId = parseInt(req.params.id);
+        const userAnswers: UserAnswer[] = req.body.answers;
+
+        if (isNaN(quizId)) {
+            return res.status(400).json({ message: 'Invalid quiz ID' });
+        }
+
+        if (!userAnswers || !Array.isArray(userAnswers)) {
+            return res.status(400).json({ message: 'Invalid answers format' });
+        }
+
+        const quiz = await quizService.getQuizById(quizId);
+        if (!quiz) {
+            return res.status(404).json({ message: "Quiz not found!" });
+        }
+
+        const result = await quizService.calculateScore(quiz, userAnswers);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to submit quiz' });
+    }
+};

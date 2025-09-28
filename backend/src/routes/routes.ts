@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { getQuestions, getQuiz, submitQuiz } from "../controller/quizController";
-
+import { getQuizQuestions, getQuizzes, submitQuiz } from "../controller/quizController";
 
 const router = Router();
 
-router.get("/:id/questions", getQuestions);
+
+router.get("/quiz", getQuizzes);
+router.get("/:id/questions", getQuizQuestions);
 router.post("/:id/submit", submitQuiz);
-router.get("/quiz", getQuiz);
 
 export default router;

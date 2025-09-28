@@ -9,69 +9,62 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.submitQuiz = exports.getQuestions = exports.getQuiz = exports.findQuiz = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
-//*************HELPER FUNCTIONS*********** */
-//returns the specific quiz along with its question
-const findQuiz = (quizId) => __awaiter(void 0, void 0, void 0, function* () {
-    const quiz = yield prisma.quiz.findUnique({
-        where: { id: quizId },
-        include: {
-            questions: {
-                include: {
-                    options: true
-                }
-            }
+exports.submitQuiz = exports.getQuizQuestions = exports.getQuizzes = void 0;
+const quizService_1 = require("../services/quizService");
+const getQuizzes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const quizzes = yield quizService_1.quizService.getAllQuizzes();
+        res.json(quizzes);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Failed to fetch quizzes' });
+    }
+});
+exports.getQuizzes = getQuizzes;
+const getQuizQuestions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const quizId = parseInt(req.params.id);
+        if (isNaN(quizId)) {
+            return res.status(400).json({ message: 'Invalid quiz ID' });
         }
-    });
-    return quiz;
+        const quiz = yield quizService_1.quizService.getQuizById(quizId);
+        if (!quiz) {
+            return res.status(404).json({ message: "Quiz not found!" });
+        }
+        const questions = quiz.questions.map(q => ({
+            id: q.id,
+            text: q.text,
+            options: q.options.map(o => ({
+                id: o.id,
+                text: o.text
+            }))
+        }));
+        res.json({ quizId: quiz.id, title: quiz.title, questions });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Failed to fetch quiz questions' });
+    }
 });
-exports.findQuiz = findQuiz;
-//return the score of the quiz as per the answers submitted by user
-function calculateScore(quiz, userAnswers) {
-    let score = 0;
-    const results = quiz.questions.map(q => {
-        const userAnswer = userAnswers.find(a => a.questionId === q.id);
-        const correctOption = q.options.find(o => o.isCorrect);
-        const isCorrect = (userAnswer === null || userAnswer === void 0 ? void 0 : userAnswer.optionId) === (correctOption === null || correctOption === void 0 ? void 0 : correctOption.id);
-        if (isCorrect)
-            score++;
-        return { questionId: q.id, isCorrect, correctAnswer: correctOption };
-    });
-    return { score, total: quiz.questions.length, results };
-}
-//returns all the quiz with it its title 
-const getQuiz = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const quiz = yield prisma.quiz.findMany();
-    res.json(quiz);
-});
-exports.getQuiz = getQuiz;
-//returns all the questions for perticular quiz
-const getQuestions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const quizId = parseInt(req.params.id);
-    const quiz = yield (0, exports.findQuiz)(quizId);
-    if (!quiz)
-        return res.status(404).json({ message: "Quiz not found !!" });
-    const questions = quiz.questions.map(q => ({
-        id: q.id,
-        text: q.text,
-        options: q.options.map(o => ({
-            id: o.id,
-            text: o.text
-        }))
-    }));
-    res.json({ quizId: quiz.id, title: quiz.title, questions });
-});
-exports.getQuestions = getQuestions;
-//returns score of the user along with its quiz analysis
+exports.getQuizQuestions = getQuizQuestions;
 const submitQuiz = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const quizId = parseInt(req.params.id);
-    const userAnswers = req.body.answers;
-    const quiz = yield (0, exports.findQuiz)(quizId);
-    if (!quiz)
-        return res.status(404).json({ message: "Quiz not found!!" });
-    const { score, total, results } = calculateScore(quiz, userAnswers);
-    res.json({ score, total, results });
+    try {
+        const quizId = parseInt(req.params.id);
+        const userAnswers = req.body.answers;
+        if (isNaN(quizId)) {
+            return res.status(400).json({ message: 'Invalid quiz ID' });
+        }
+        if (!userAnswers || !Array.isArray(userAnswers)) {
+            return res.status(400).json({ message: 'Invalid answers format' });
+        }
+        const quiz = yield quizService_1.quizService.getQuizById(quizId);
+        if (!quiz) {
+            return res.status(404).json({ message: "Quiz not found!" });
+        }
+        const result = yield quizService_1.quizService.calculateScore(quiz, userAnswers);
+        res.json(result);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Failed to submit quiz' });
+    }
 });
 exports.submitQuiz = submitQuiz;
