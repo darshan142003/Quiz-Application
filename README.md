@@ -1,31 +1,47 @@
-# Quiz App
+# Quiz Application
 
-A full-stack quiz application built with React frontend and Node.js backend, featuring real-time quiz functionality and score calculation.
+A full-stack **Quiz Application** that allows users to take interactive quizzes in real time with instant score calculation. 
+The project is designed for learning, practicing, and testing knowledge with a seamless experience across frontend and backend.
 
-## Quick Start
+## 📌 Project Overview
 
-Run the entire application with Docker:
+This project demonstrates a modern full-stack web application with features like:
+- **Interactive Quiz Gameplay**: Answer multiple-choice questions with a clean UI.  
+- **Real-time Score Calculation**: Instant feedback on quiz completion.  
+- **Database Persistence**: User progress and quiz data stored using Prisma ORM with SQLite.  
+- **Scalable Architecture**: Containerized using Docker for easy setup and deployment.  
 
+The app is built to be simple for learners while showcasing production-ready technologies and practices.
+
+---
+
+## 🚀 Quick Start
+
+Run the entire application with Docker: 
+
+*Note: You must have docker or docker engine on your system*
 ```bash
 docker compose up
 ```
 
-This will start both frontend and backend services automatically.
+This will start both **frontend** and **backend** services automatically.
 
-## Manual Setup
+---
+
+## ⚙️ Manual Setup
 
 ### Backend Setup
 
 Navigate to the backend directory:
 
 ```bash
-cd /backend
+cd backend
 ```
 
 1. Install dependencies:
 
 ```bash
-npm /install
+npm install
 ```
 
 2. Set up environment variables:  
@@ -49,23 +65,25 @@ npx prisma generate
 npm start
 ```
 
-*Note: Pre-built version is included to save setup time*
+*Note: A pre-built version is included to save setup time.*
 
-### Testing
+#### Testing Backend
 
-Test the backend score calculation logic:
+Run backend tests to verify score calculation logic:
 
 ```bash
-cd /backend
+cd backend
 npm run test:submit
 ```
+
+---
 
 ### Frontend Setup
 
 Navigate to the frontend directory:
 
 ```bash
-cd /frontend
+cd frontend
 ```
 
 1. Install dependencies:
@@ -80,16 +98,33 @@ npm install
 npm run dev
 ```
 
-## Tech Stack
+The app will be available at: [http://localhost:5173](http://localhost:5173)
 
-- **Frontend**: React with Vite, TypeScript, Tailwind CSS, Recoil  
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React (Vite, TypeScript, Tailwind CSS, Recoil)  
 - **Backend**: Node.js with Prisma ORM  
 - **Database**: SQLite  
 - **Containerization**: Docker & Docker Compose  
 
-## Features
+---
 
-- Interactive quiz interface  
-- Real-time score calculation  
-- Database persistence with Prisma  
-- Containerized deployment  
+## ✨ Features
+
+- Clean and interactive quiz interface  
+- Real-time score calculation and feedback  
+- Persistent storage with Prisma + SQLite  
+- Easy deployment using Docker  
+- Example backend tests for quiz submission logic  
+
+---
+
+## 📖 About This Project
+
+This project was built to demonstrate the fundamentals of **full-stack development** using modern tools.  
+It’s a great starting point for learning how frontend and backend communicate, how databases can persist application state, 
+and how Docker simplifies deployment.  
+
+The quiz application can be extended with features like user authentication, leaderboards, different quiz categories, and more.  
